@@ -37,8 +37,10 @@ export default function Telegram() {
 
   const [schedules, setSchedules] = useState(initialSchedules);
   const [logs, setLogs] = useState(initialLogs);
-  const [selectedTpl, setSelectedTpl] = useState<keyof typeof templates>("daily");
-  const [tplContent, setTplContent] = useState(templates.daily.sample);
+  const [templates, setTemplates] = useState(defaultTemplates);
+  const [selectedTpl, setSelectedTpl] = useState<keyof typeof defaultTemplates>("daily");
+  const [tplContent, setTplContent] = useState(defaultTemplates.daily.sample);
+  const [editing, setEditing] = useState<TgSchedule | null>(null);
 
   const triggerNow = (s: TgSchedule) => {
     const ch = tgChannels.find((c) => c.id === s.channelId)!;
@@ -58,6 +60,22 @@ export default function Telegram() {
   const toggleSchedule = (id: string) => {
     if (!canManage) return toast.error("无权限");
     setSchedules(schedules.map((s) => (s.id === id ? { ...s, enabled: !s.enabled } : s)));
+  };
+
+  const saveSchedule = (s: TgSchedule) => {
+    setSchedules((prev) => prev.map((x) => (x.id === s.id ? s : x)));
+    setEditing(null);
+    toast.success("推送计划已更新", { description: `时间: ${s.cron} · 模板: ${templates[s.template].title}` });
+  };
+
+  const saveTemplate = () => {
+    setTemplates({ ...templates, [selectedTpl]: { ...templates[selectedTpl], sample: tplContent } });
+    toast.success("模板已保存");
+  };
+  const resetTemplate = () => {
+    setTplContent(defaultTemplates[selectedTpl].sample);
+    setTemplates({ ...templates, [selectedTpl]: { ...defaultTemplates[selectedTpl] } });
+    toast.success("已恢复默认");
   };
 
   return (
