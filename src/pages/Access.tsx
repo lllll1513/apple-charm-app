@@ -82,13 +82,13 @@ export default function Access() {
           <TabsTrigger value="audit" className="rounded-lg">审计日志</TabsTrigger>
         </TabsList>
 
-        {/* 账户列表 */}
+        {/* 账户列表 - 管理员管理表 */}
         <TabsContent value="accounts">
-          <Card className="glass rounded-2xl p-5">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="relative flex-1 max-w-sm">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="搜索姓名 / 邮箱" value={q} onChange={(e) => setQ(e.target.value)} className="pl-9 rounded-xl bg-background/60" />
+          <Card className="glass rounded-2xl p-0 overflow-hidden">
+            <div className="flex items-center justify-between gap-3 p-5 border-b border-border/40">
+              <div>
+                <div className="font-semibold tracking-tight">管理员管理</div>
+                <div className="text-xs text-muted-foreground mt-0.5">管理员账号、权限与启停状态</div>
               </div>
               <Select value={filterRole} onValueChange={(v: any) => setFilterRole(v)}>
                 <SelectTrigger className="w-40 rounded-xl bg-background/60"><SelectValue /></SelectTrigger>
@@ -99,69 +99,60 @@ export default function Access() {
               </Select>
             </div>
 
-            <div className="overflow-hidden rounded-xl border border-border/50">
+            <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-secondary/50 text-xs text-muted-foreground">
+                <thead className="bg-secondary/40 text-xs text-muted-foreground">
                   <tr>
-                    <th className="text-left px-4 py-3">成员</th>
-                    <th className="text-left px-4 py-3">角色</th>
-                    <th className="text-left px-4 py-3">数据范围</th>
-                    <th className="text-left px-4 py-3">2FA</th>
-                    <th className="text-left px-4 py-3">状态</th>
-                    <th className="text-left px-4 py-3">最近活动</th>
-                    <th className="w-10"></th>
+                    <th className="text-left px-5 py-3 w-12">#</th>
+                    <th className="text-left px-3 py-3">用户名</th>
+                    <th className="text-left px-3 py-3">昵称</th>
+                    <th className="text-left px-3 py-3">角色</th>
+                    <th className="text-left px-3 py-3">状态</th>
+                    <th className="text-left px-3 py-3">最后登录</th>
+                    <th className="text-left px-3 py-3">创建时间</th>
+                    <th className="text-right px-5 py-3 w-[160px]">操作</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((a) => {
+                  {filtered.map((a, i) => {
                     const m = getMember(a.memberId);
                     const def = roleDefs[a.role];
                     return (
                       <tr key={a.id} className="border-t border-border/40 hover:bg-secondary/30 transition-colors">
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-3">
-                            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary/20 to-purple/20 flex items-center justify-center text-base">{m.avatar}</div>
-                            <div>
-                              <div className="font-medium">{m.name}</div>
-                              <div className="text-xs text-muted-foreground">{m.email}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <Select value={a.role} onValueChange={(v: AppRole) => updateAccount(a.id, { role: v })}>
-                            <SelectTrigger className="h-8 w-32 rounded-lg bg-background/60 text-xs">
-                              <span className={`px-2 py-0.5 rounded-md text-[11px] ${def.badge}`}>{def.label}</span>
-                            </SelectTrigger>
-                            <SelectContent>
-                              {allRoles.map((r) => <SelectItem key={r} value={r}>{roleDefs[r].label}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        </td>
-                        <td className="px-4 py-3 text-xs text-muted-foreground">
-                          {a.scope === "all" ? <Badge variant="outline" className="rounded-md">全部项目</Badge> : `${a.scope.length} 个项目`}
-                        </td>
-                        <td className="px-4 py-3">
-                          <Switch checked={a.twoFA} onCheckedChange={(v) => updateAccount(a.id, { twoFA: v })} />
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={`inline-flex items-center gap-1.5 text-xs ${a.status === "active" ? "text-success" : a.status === "invited" ? "text-warning" : "text-muted-foreground"}`}>
-                            <span className={`h-1.5 w-1.5 rounded-full ${a.status === "active" ? "bg-success" : a.status === "invited" ? "bg-warning" : "bg-muted-foreground"}`} />
-                            {a.status === "active" ? "已激活" : a.status === "invited" ? "待接受" : "已停用"}
+                        <td className="px-5 py-3 text-muted-foreground">{i + 1}</td>
+                        <td className="px-3 py-3 font-medium font-mono text-[13px]">{a.username}</td>
+                        <td className="px-3 py-3 text-muted-foreground">
+                          <span className="inline-flex items-center gap-2">
+                            <span className="text-base">{m.avatar}</span>
+                            <span>{m.name}</span>
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-xs text-muted-foreground">{a.lastActive}</td>
-                        <td className="px-2">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger className="h-8 w-8 rounded-lg hover:bg-secondary flex items-center justify-center"><MoreHorizontal className="h-4 w-4" /></DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="rounded-xl">
-                              <DropdownMenuItem onClick={() => toast.success("已发送重置邮件")}><Mail className="h-4 w-4 mr-2" />发送重置邮件</DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => toast.success("已重置 2FA")}><KeyRound className="h-4 w-4 mr-2" />重置 2FA</DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem className="text-destructive" onClick={() => updateAccount(a.id, { status: "disabled" })}>
-                                <Lock className="h-4 w-4 mr-2" />停用账户
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                        <td className="px-3 py-3">
+                          <span className={`px-2 py-0.5 rounded-md text-[11px] font-medium ${def.badge}`}>{def.label}</span>
+                        </td>
+                        <td className="px-3 py-3">
+                          {a.status === "active" ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-success/10 text-success text-[11px] font-medium">启用</span>
+                          ) : a.status === "invited" ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-warning/10 text-warning text-[11px] font-medium">待接受</span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-muted text-muted-foreground text-[11px] font-medium">已停用</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-3 text-xs text-muted-foreground font-mono">{a.lastActive}</td>
+                        <td className="px-3 py-3 text-xs text-muted-foreground font-mono">{a.createdAt}</td>
+                        <td className="px-5 py-3">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <Button size="icon" variant="ghost" className="h-8 w-8 rounded-lg" onClick={() => setEditing(a)} disabled={!canEditAccess} title="编辑">
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button size="icon" variant="ghost" className="h-8 w-8 rounded-lg" onClick={() => toggleStatus(a)} disabled={!canEditAccess} title={a.status === "active" ? "停用" : "启用"}>
+                              <Power className={`h-3.5 w-3.5 ${a.status === "active" ? "text-success" : "text-muted-foreground"}`} />
+                            </Button>
+                            <Button size="icon" variant="ghost" className="h-8 w-8 rounded-lg bg-destructive/10 hover:bg-destructive/20 text-destructive" onClick={() => deleteAccount(a.id)} disabled={!canDelete} title="删除">
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     );
