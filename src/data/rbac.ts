@@ -103,25 +103,23 @@ export const defaultMatrix: Matrix = {
 export interface Account {
   id: string;
   memberId: string; // 关联 mock members
-  username: string; // 登录用户名
   role: AppRole;
   status: "active" | "invited" | "disabled";
   lastActive: string;
-  createdAt: string;
   twoFA: boolean;
   scope: "all" | string[]; // 项目 id 列表,all 表示全部
 }
 
 export const accounts: Account[] = [
-  { id: "a1", memberId: "u1", username: "chenyiming",  role: "manager", status: "active",   lastActive: "2026/4/21 22:27:47", createdAt: "2025/3/20 21:00:33", twoFA: true,  scope: ["p1","p4"] },
-  { id: "a2", memberId: "u2", username: "linzian",     role: "member",  status: "active",   lastActive: "2026/4/21 10:17:29", createdAt: "2025/3/19 10:15:06", twoFA: true,  scope: ["p1","p6"] },
-  { id: "a3", memberId: "u3", username: "sumuchen",    role: "member",  status: "active",   lastActive: "2026/4/20 16:33:11", createdAt: "2025/3/18 16:17:49", twoFA: false, scope: ["p1","p3"] },
-  { id: "a4", memberId: "u4", username: "gujingxing",  role: "manager", status: "active",   lastActive: "2026/4/21 12:37:03", createdAt: "2025/3/18 11:27:31", twoFA: true,  scope: ["p2","p5","p6"] },
-  { id: "a5", memberId: "u5", username: "zhouqinghe",  role: "member",  status: "invited",  lastActive: "从未登录",            createdAt: "2026/3/18 11:25:23", twoFA: false, scope: ["p1","p5"] },
-  { id: "a6", memberId: "u6", username: "bairuoxi",    role: "manager", status: "active",   lastActive: "2026/4/21 19:57:21", createdAt: "2025/3/17 20:14:51", twoFA: true,  scope: ["p3","p4"] },
-  { id: "a7", memberId: "u7", username: "songyizhou",  role: "leader",  status: "disabled", lastActive: "2026/3/12 11:57:23", createdAt: "2025/3/16 18:37:09", twoFA: true,  scope: "all" },
-  { id: "a8", memberId: "u8", username: "xiazhixu",    role: "admin",   status: "active",   lastActive: "2026/4/21 09:12:08", createdAt: "2024/11/02 09:00:00", twoFA: true,  scope: "all" },
-  { id: "a9", memberId: "u1", username: "owner_root",  role: "owner",   status: "active",   lastActive: "刚刚",                createdAt: "2024/06/01 00:00:00", twoFA: true,  scope: "all" },
+  { id: "a1", memberId: "u1", role: "manager", status: "active",   lastActive: "2 分钟前",  twoFA: true,  scope: ["p1","p4"] },
+  { id: "a2", memberId: "u2", role: "member",  status: "active",   lastActive: "10 分钟前", twoFA: true,  scope: ["p1","p6"] },
+  { id: "a3", memberId: "u3", role: "member",  status: "active",   lastActive: "1 小时前",  twoFA: false, scope: ["p1","p3"] },
+  { id: "a4", memberId: "u4", role: "manager", status: "active",   lastActive: "刚刚",      twoFA: true,  scope: ["p2","p5","p6"] },
+  { id: "a5", memberId: "u5", role: "member",  status: "active",   lastActive: "30 分钟前", twoFA: false, scope: ["p1","p5"] },
+  { id: "a6", memberId: "u6", role: "manager", status: "active",   lastActive: "今天 09:00", twoFA: true,  scope: ["p3","p4"] },
+  { id: "a7", memberId: "u7", role: "leader",  status: "active",   lastActive: "昨天",      twoFA: true,  scope: "all" },
+  { id: "a8", memberId: "u8", role: "admin",   status: "active",   lastActive: "5 分钟前",  twoFA: true,  scope: "all" },
+  { id: "a9", memberId: "u1", role: "owner",   status: "active",   lastActive: "刚刚",      twoFA: true,  scope: "all" },
 ];
 
 // TG 推送配置(mock)

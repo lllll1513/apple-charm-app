@@ -8,23 +8,27 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { allResources, allActions, allRoles, roleDefs, resourceLabel, actionLabel, accounts as initialAccounts, AppRole, Action, Account } from "@/data/rbac";
+import { allResources, allActions, allRoles, roleDefs, resourceLabel, actionLabel, accounts as initialAccounts, AppRole, Action } from "@/data/rbac";
 import { useAuth } from "@/hooks/useAuth";
 import { getMember } from "@/data/mock";
-import { ShieldCheck, Mail, UserPlus, KeyRound, Lock, Activity, Pencil, Trash2, Power } from "lucide-react";
+import { Search, ShieldCheck, Mail, MoreHorizontal, UserPlus, KeyRound, Lock, Activity } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 
 export default function Access() {
   const { matrix, setMatrix, can } = useAuth();
   const [accounts, setAccounts] = useState(initialAccounts);
+  const [q, setQ] = useState("");
   const [filterRole, setFilterRole] = useState<AppRole | "all">("all");
-  const [editing, setEditing] = useState<Account | null>(null);
 
   const canEditAccess = can("access", "edit");
   const canCreate = can("access", "create");
-  const canDelete = can("access", "delete");
 
-  const filtered = accounts.filter((a) => filterRole === "all" || a.role === filterRole);
+  const filtered = accounts.filter((a) => {
+    const m = getMember(a.memberId);
+    const hit = m.name.includes(q) || m.email.includes(q);
+    return hit && (filterRole === "all" || a.role === filterRole);
+  });
 
   const togglePerm = (role: AppRole, resource: typeof allResources[number], action: Action) => {
     if (!canEditAccess) return toast.error("无权限修改", { description: "当前角色不可编辑权限矩阵" });
@@ -33,20 +37,10 @@ export default function Access() {
     setMatrix({ ...matrix, [role]: { ...matrix[role], [resource]: next } });
   };
 
-  const updateAccount = (id: string, patch: Partial<Account>) => {
+  const updateAccount = (id: string, patch: Partial<typeof accounts[number]>) => {
     if (!canEditAccess) return toast.error("无权限修改账户");
     setAccounts(accounts.map((a) => (a.id === id ? { ...a, ...patch } : a)));
     toast.success("账户已更新");
-  };
-
-  const deleteAccount = (id: string) => {
-    if (!canDelete) return toast.error("无权限删除");
-    setAccounts(accounts.filter((a) => a.id !== id));
-    toast.success("账户已删除");
-  };
-
-  const toggleStatus = (a: Account) => {
-    updateAccount(a.id, { status: a.status === "active" ? "disabled" : "active" });
   };
 
   return (
@@ -61,14 +55,10 @@ export default function Access() {
                 <UserPlus className="h-4 w-4" /> 邀请成员
               </Button>
             </DialogTrigger>
-            <InviteDialog onInvite={(email, username, role) => {
+            <InviteDialog onInvite={(email, role) => {
               const newId = `a${accounts.length + 1}`;
-              setAccounts([...accounts, {
-                id: newId, memberId: "u3", username, role, status: "invited",
-                lastActive: "从未登录", createdAt: new Date().toLocaleString("zh-CN"),
-                twoFA: false, scope: "all",
-              }]);
-              toast.success(`已发送邀请到 ${email}`, { description: `账号: ${username} · 角色: ${roleDefs[role].label}` });
+              setAccounts([...accounts, { id: newId, memberId: "u3", role, status: "invited", lastActive: "—", twoFA: false, scope: "all" }]);
+              toast.success(`已发送邀请到 ${email}`, { description: `角色: ${roleDefs[role].label}` });
             }} />
           </Dialog>
         }
@@ -82,13 +72,13 @@ export default function Access() {
           <TabsTrigger value="audit" className="rounded-lg">审计日志</TabsTrigger>
         </TabsList>
 
-        {/* 账户列表 - 管理员管理表 */}
+        {/* 账户列表 */}
         <TabsContent value="accounts">
-          <Card className="glass rounded-2xl p-0 overflow-hidden">
-            <div className="flex items-center justify-between gap-3 p-5 border-b border-border/40">
-              <div>
-                <div className="font-semibold tracking-tight">管理员管理</div>
-                <div className="text-xs text-muted-foreground mt-0.5">管理员账号、权限与启停状态</div>
+          <Card className="glass rounded-2xl p-5">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="relative flex-1 max-w-sm">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="搜索姓名 / 邮箱" value={q} onChange={(e) => setQ(e.target.value)} className="pl-9 rounded-xl bg-background/60" />
               </div>
               <Select value={filterRole} onValueChange={(v: any) => setFilterRole(v)}>
                 <SelectTrigger className="w-40 rounded-xl bg-background/60"><SelectValue /></SelectTrigger>
@@ -99,60 +89,69 @@ export default function Access() {
               </Select>
             </div>
 
-            <div className="overflow-x-auto">
+            <div className="overflow-hidden rounded-xl border border-border/50">
               <table className="w-full text-sm">
-                <thead className="bg-secondary/40 text-xs text-muted-foreground">
+                <thead className="bg-secondary/50 text-xs text-muted-foreground">
                   <tr>
-                    <th className="text-left px-5 py-3 w-12">#</th>
-                    <th className="text-left px-3 py-3">用户名</th>
-                    <th className="text-left px-3 py-3">昵称</th>
-                    <th className="text-left px-3 py-3">角色</th>
-                    <th className="text-left px-3 py-3">状态</th>
-                    <th className="text-left px-3 py-3">最后登录</th>
-                    <th className="text-left px-3 py-3">创建时间</th>
-                    <th className="text-right px-5 py-3 w-[160px]">操作</th>
+                    <th className="text-left px-4 py-3">成员</th>
+                    <th className="text-left px-4 py-3">角色</th>
+                    <th className="text-left px-4 py-3">数据范围</th>
+                    <th className="text-left px-4 py-3">2FA</th>
+                    <th className="text-left px-4 py-3">状态</th>
+                    <th className="text-left px-4 py-3">最近活动</th>
+                    <th className="w-10"></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((a, i) => {
+                  {filtered.map((a) => {
                     const m = getMember(a.memberId);
                     const def = roleDefs[a.role];
                     return (
                       <tr key={a.id} className="border-t border-border/40 hover:bg-secondary/30 transition-colors">
-                        <td className="px-5 py-3 text-muted-foreground">{i + 1}</td>
-                        <td className="px-3 py-3 font-medium font-mono text-[13px]">{a.username}</td>
-                        <td className="px-3 py-3 text-muted-foreground">
-                          <span className="inline-flex items-center gap-2">
-                            <span className="text-base">{m.avatar}</span>
-                            <span>{m.name}</span>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary/20 to-purple/20 flex items-center justify-center text-base">{m.avatar}</div>
+                            <div>
+                              <div className="font-medium">{m.name}</div>
+                              <div className="text-xs text-muted-foreground">{m.email}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <Select value={a.role} onValueChange={(v: AppRole) => updateAccount(a.id, { role: v })}>
+                            <SelectTrigger className="h-8 w-32 rounded-lg bg-background/60 text-xs">
+                              <span className={`px-2 py-0.5 rounded-md text-[11px] ${def.badge}`}>{def.label}</span>
+                            </SelectTrigger>
+                            <SelectContent>
+                              {allRoles.map((r) => <SelectItem key={r} value={r}>{roleDefs[r].label}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground">
+                          {a.scope === "all" ? <Badge variant="outline" className="rounded-md">全部项目</Badge> : `${a.scope.length} 个项目`}
+                        </td>
+                        <td className="px-4 py-3">
+                          <Switch checked={a.twoFA} onCheckedChange={(v) => updateAccount(a.id, { twoFA: v })} />
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex items-center gap-1.5 text-xs ${a.status === "active" ? "text-success" : a.status === "invited" ? "text-warning" : "text-muted-foreground"}`}>
+                            <span className={`h-1.5 w-1.5 rounded-full ${a.status === "active" ? "bg-success" : a.status === "invited" ? "bg-warning" : "bg-muted-foreground"}`} />
+                            {a.status === "active" ? "已激活" : a.status === "invited" ? "待接受" : "已停用"}
                           </span>
                         </td>
-                        <td className="px-3 py-3">
-                          <span className={`px-2 py-0.5 rounded-md text-[11px] font-medium ${def.badge}`}>{def.label}</span>
-                        </td>
-                        <td className="px-3 py-3">
-                          {a.status === "active" ? (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-success/10 text-success text-[11px] font-medium">启用</span>
-                          ) : a.status === "invited" ? (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-warning/10 text-warning text-[11px] font-medium">待接受</span>
-                          ) : (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-muted text-muted-foreground text-[11px] font-medium">已停用</span>
-                          )}
-                        </td>
-                        <td className="px-3 py-3 text-xs text-muted-foreground font-mono">{a.lastActive}</td>
-                        <td className="px-3 py-3 text-xs text-muted-foreground font-mono">{a.createdAt}</td>
-                        <td className="px-5 py-3">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <Button size="icon" variant="ghost" className="h-8 w-8 rounded-lg" onClick={() => setEditing(a)} disabled={!canEditAccess} title="编辑">
-                              <Pencil className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button size="icon" variant="ghost" className="h-8 w-8 rounded-lg" onClick={() => toggleStatus(a)} disabled={!canEditAccess} title={a.status === "active" ? "停用" : "启用"}>
-                              <Power className={`h-3.5 w-3.5 ${a.status === "active" ? "text-success" : "text-muted-foreground"}`} />
-                            </Button>
-                            <Button size="icon" variant="ghost" className="h-8 w-8 rounded-lg bg-destructive/10 hover:bg-destructive/20 text-destructive" onClick={() => deleteAccount(a.id)} disabled={!canDelete} title="删除">
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </div>
+                        <td className="px-4 py-3 text-xs text-muted-foreground">{a.lastActive}</td>
+                        <td className="px-2">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger className="h-8 w-8 rounded-lg hover:bg-secondary flex items-center justify-center"><MoreHorizontal className="h-4 w-4" /></DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="rounded-xl">
+                              <DropdownMenuItem onClick={() => toast.success("已发送重置邮件")}><Mail className="h-4 w-4 mr-2" />发送重置邮件</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => toast.success("已重置 2FA")}><KeyRound className="h-4 w-4 mr-2" />重置 2FA</DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem className="text-destructive" onClick={() => updateAccount(a.id, { status: "disabled" })}>
+                                <Lock className="h-4 w-4 mr-2" />停用账户
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </td>
                       </tr>
                     );
@@ -280,39 +279,22 @@ export default function Access() {
           </Card>
         </TabsContent>
       </Tabs>
-
-      {/* 编辑账户 */}
-      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
-        {editing && (
-          <EditAccountDialog
-            account={editing}
-            onSave={(patch) => { updateAccount(editing.id, patch); setEditing(null); }}
-          />
-        )}
-      </Dialog>
     </>
   );
 }
 
-function InviteDialog({ onInvite }: { onInvite: (email: string, username: string, role: AppRole) => void }) {
+function InviteDialog({ onInvite }: { onInvite: (email: string, role: AppRole) => void }) {
   const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
   const [role, setRole] = useState<AppRole>("member");
   return (
     <DialogContent className="rounded-2xl">
       <DialogHeader>
-        <DialogTitle>邀请新管理员</DialogTitle>
+        <DialogTitle>邀请新成员</DialogTitle>
       </DialogHeader>
       <div className="space-y-4 py-2">
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="text-xs text-muted-foreground mb-1.5 block">用户名</label>
-            <Input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="login_name" className="rounded-xl font-mono" />
-          </div>
-          <div>
-            <label className="text-xs text-muted-foreground mb-1.5 block">邮箱</label>
-            <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@team.io" className="rounded-xl" />
-          </div>
+        <div>
+          <label className="text-xs text-muted-foreground mb-1.5 block">邮箱</label>
+          <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@team.io" className="rounded-xl" />
         </div>
         <div>
           <label className="text-xs text-muted-foreground mb-1.5 block">分配角色</label>
@@ -332,68 +314,7 @@ function InviteDialog({ onInvite }: { onInvite: (email: string, username: string
         </div>
       </div>
       <DialogFooter>
-        <Button className="rounded-xl" onClick={() => email && username && onInvite(email, username, role)}>发送邀请</Button>
-      </DialogFooter>
-    </DialogContent>
-  );
-}
-
-function EditAccountDialog({ account, onSave }: { account: Account; onSave: (patch: Partial<Account>) => void }) {
-  const [username, setUsername] = useState(account.username);
-  const [role, setRole] = useState<AppRole>(account.role);
-  const [status, setStatus] = useState(account.status);
-  const [twoFA, setTwoFA] = useState(account.twoFA);
-
-  return (
-    <DialogContent className="rounded-2xl">
-      <DialogHeader>
-        <DialogTitle>编辑管理员</DialogTitle>
-      </DialogHeader>
-      <div className="space-y-4 py-2">
-        <div>
-          <label className="text-xs text-muted-foreground mb-1.5 block">用户名</label>
-          <Input value={username} onChange={(e) => setUsername(e.target.value)} className="rounded-xl font-mono" />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="text-xs text-muted-foreground mb-1.5 block">角色</label>
-            <Select value={role} onValueChange={(v: AppRole) => setRole(v)}>
-              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {allRoles.map((r) => <SelectItem key={r} value={r}>{roleDefs[r].label}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="text-xs text-muted-foreground mb-1.5 block">状态</label>
-            <Select value={status} onValueChange={(v: any) => setStatus(v)}>
-              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="active">启用</SelectItem>
-                <SelectItem value="invited">待接受</SelectItem>
-                <SelectItem value="disabled">已停用</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/40">
-          <div>
-            <div className="text-sm font-medium">双重认证 (2FA)</div>
-            <div className="text-[11px] text-muted-foreground mt-0.5">登录时需要二次验证码</div>
-          </div>
-          <Switch checked={twoFA} onCheckedChange={setTwoFA} />
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="rounded-xl flex-1" onClick={() => toast.success("已发送密码重置邮件")}>
-            <Mail className="h-3.5 w-3.5 mr-1.5" /> 重置密码
-          </Button>
-          <Button variant="outline" size="sm" className="rounded-xl flex-1" onClick={() => toast.success("已重置 2FA 设备")}>
-            <KeyRound className="h-3.5 w-3.5 mr-1.5" /> 重置 2FA
-          </Button>
-        </div>
-      </div>
-      <DialogFooter>
-        <Button className="rounded-xl" onClick={() => onSave({ username, role, status, twoFA })}>保存</Button>
+        <Button className="rounded-xl" onClick={() => email && onInvite(email, role)}>发送邀请</Button>
       </DialogFooter>
     </DialogContent>
   );
