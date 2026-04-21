@@ -280,22 +280,39 @@ export default function Access() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* 编辑账户 */}
+      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+        {editing && (
+          <EditAccountDialog
+            account={editing}
+            onSave={(patch) => { updateAccount(editing.id, patch); setEditing(null); }}
+          />
+        )}
+      </Dialog>
     </>
   );
 }
 
-function InviteDialog({ onInvite }: { onInvite: (email: string, role: AppRole) => void }) {
+function InviteDialog({ onInvite }: { onInvite: (email: string, username: string, role: AppRole) => void }) {
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [role, setRole] = useState<AppRole>("member");
   return (
     <DialogContent className="rounded-2xl">
       <DialogHeader>
-        <DialogTitle>邀请新成员</DialogTitle>
+        <DialogTitle>邀请新管理员</DialogTitle>
       </DialogHeader>
       <div className="space-y-4 py-2">
-        <div>
-          <label className="text-xs text-muted-foreground mb-1.5 block">邮箱</label>
-          <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@team.io" className="rounded-xl" />
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs text-muted-foreground mb-1.5 block">用户名</label>
+            <Input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="login_name" className="rounded-xl font-mono" />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground mb-1.5 block">邮箱</label>
+            <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@team.io" className="rounded-xl" />
+          </div>
         </div>
         <div>
           <label className="text-xs text-muted-foreground mb-1.5 block">分配角色</label>
@@ -315,7 +332,68 @@ function InviteDialog({ onInvite }: { onInvite: (email: string, role: AppRole) =
         </div>
       </div>
       <DialogFooter>
-        <Button className="rounded-xl" onClick={() => email && onInvite(email, role)}>发送邀请</Button>
+        <Button className="rounded-xl" onClick={() => email && username && onInvite(email, username, role)}>发送邀请</Button>
+      </DialogFooter>
+    </DialogContent>
+  );
+}
+
+function EditAccountDialog({ account, onSave }: { account: Account; onSave: (patch: Partial<Account>) => void }) {
+  const [username, setUsername] = useState(account.username);
+  const [role, setRole] = useState<AppRole>(account.role);
+  const [status, setStatus] = useState(account.status);
+  const [twoFA, setTwoFA] = useState(account.twoFA);
+
+  return (
+    <DialogContent className="rounded-2xl">
+      <DialogHeader>
+        <DialogTitle>编辑管理员</DialogTitle>
+      </DialogHeader>
+      <div className="space-y-4 py-2">
+        <div>
+          <label className="text-xs text-muted-foreground mb-1.5 block">用户名</label>
+          <Input value={username} onChange={(e) => setUsername(e.target.value)} className="rounded-xl font-mono" />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs text-muted-foreground mb-1.5 block">角色</label>
+            <Select value={role} onValueChange={(v: AppRole) => setRole(v)}>
+              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {allRoles.map((r) => <SelectItem key={r} value={r}>{roleDefs[r].label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground mb-1.5 block">状态</label>
+            <Select value={status} onValueChange={(v: any) => setStatus(v)}>
+              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">启用</SelectItem>
+                <SelectItem value="invited">待接受</SelectItem>
+                <SelectItem value="disabled">已停用</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/40">
+          <div>
+            <div className="text-sm font-medium">双重认证 (2FA)</div>
+            <div className="text-[11px] text-muted-foreground mt-0.5">登录时需要二次验证码</div>
+          </div>
+          <Switch checked={twoFA} onCheckedChange={setTwoFA} />
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="rounded-xl flex-1" onClick={() => toast.success("已发送密码重置邮件")}>
+            <Mail className="h-3.5 w-3.5 mr-1.5" /> 重置密码
+          </Button>
+          <Button variant="outline" size="sm" className="rounded-xl flex-1" onClick={() => toast.success("已重置 2FA 设备")}>
+            <KeyRound className="h-3.5 w-3.5 mr-1.5" /> 重置 2FA
+          </Button>
+        </div>
+      </div>
+      <DialogFooter>
+        <Button className="rounded-xl" onClick={() => onSave({ username, role, status, twoFA })}>保存</Button>
       </DialogFooter>
     </DialogContent>
   );
