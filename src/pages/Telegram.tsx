@@ -10,17 +10,25 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { tgChannels, tgSchedules as initialSchedules, tgLogs as initialLogs, TgSchedule } from "@/data/rbac";
-import { Send, Plus, Bot, Hash, Users, CheckCircle2, XCircle, Clock, Sparkles, Calendar, Eye, Trash2, Power } from "lucide-react";
+import { Send, Plus, Bot, Hash, Users, CheckCircle2, XCircle, Clock, Sparkles, Calendar, Eye, Trash2, Pencil } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
-const templates: Record<string, { title: string; sample: string }> = {
+const defaultTemplates: Record<string, { title: string; sample: string }> = {
   daily:   { title: "每日总结",   sample: "📊 *今日总结*\n\n✅ 完成任务: {done}\n🚧 进行中: {wip}\n⚠️ 延期: {late}\n\n详情查看 Lumin 工作台" },
   morning: { title: "早间播报",   sample: "🌅 *早安!今日待办*\n\n📋 待开始: {todo} 项\n🔥 高优先级: {high}\n\n点击查看个人任务清单" },
   evening: { title: "晚间总结",   sample: "🌆 *今日收官*\n\n✅ 已完成 {done}/{total}\n📈 完成率 {rate}%\n\n明日重点提醒已发送" },
   weekly:  { title: "周报摘要",   sample: "📅 *周报 · 第 {week} 周*\n\n本周完成: {done} 项 ({delta})\n核心项目进度:\n{projects}" },
   alert:   { title: "高危预警",   sample: "🚨 *风险提醒*\n\n任务「{task}」 已逾期 {days} 天\n负责人: {owner}\n关联项目: {project}" },
 };
+
+// 友好时间转 Cron(分钟 小时 * * 周)
+const timeToCron = (hh: string, mm: string, weekday: string) => `${mm} ${hh} * * ${weekday}`;
+const cronToTime = (cron: string) => {
+  const p = cron.split(" ");
+  return { mm: p[0] ?? "0", hh: p[1] ?? "9", weekday: p[4] ?? "*" };
+};
+const weekdayLabel = (w: string) => ({ "*": "每天", "1": "每周一", "2": "每周二", "3": "每周三", "4": "每周四", "5": "每周五", "6": "每周六", "0": "每周日" }[w] ?? w);
 
 export default function Telegram() {
   const { can } = useAuth();
