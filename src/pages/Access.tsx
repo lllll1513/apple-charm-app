@@ -8,27 +8,23 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { allResources, allActions, allRoles, roleDefs, resourceLabel, actionLabel, accounts as initialAccounts, AppRole, Action } from "@/data/rbac";
+import { allResources, allActions, allRoles, roleDefs, resourceLabel, actionLabel, accounts as initialAccounts, AppRole, Action, Account } from "@/data/rbac";
 import { useAuth } from "@/hooks/useAuth";
 import { getMember } from "@/data/mock";
-import { Search, ShieldCheck, Mail, MoreHorizontal, UserPlus, KeyRound, Lock, Activity } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { ShieldCheck, Mail, UserPlus, KeyRound, Lock, Activity, Pencil, Trash2, Power } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Access() {
   const { matrix, setMatrix, can } = useAuth();
   const [accounts, setAccounts] = useState(initialAccounts);
-  const [q, setQ] = useState("");
   const [filterRole, setFilterRole] = useState<AppRole | "all">("all");
+  const [editing, setEditing] = useState<Account | null>(null);
 
   const canEditAccess = can("access", "edit");
   const canCreate = can("access", "create");
+  const canDelete = can("access", "delete");
 
-  const filtered = accounts.filter((a) => {
-    const m = getMember(a.memberId);
-    const hit = m.name.includes(q) || m.email.includes(q);
-    return hit && (filterRole === "all" || a.role === filterRole);
-  });
+  const filtered = accounts.filter((a) => filterRole === "all" || a.role === filterRole);
 
   const togglePerm = (role: AppRole, resource: typeof allResources[number], action: Action) => {
     if (!canEditAccess) return toast.error("无权限修改", { description: "当前角色不可编辑权限矩阵" });
@@ -37,10 +33,20 @@ export default function Access() {
     setMatrix({ ...matrix, [role]: { ...matrix[role], [resource]: next } });
   };
 
-  const updateAccount = (id: string, patch: Partial<typeof accounts[number]>) => {
+  const updateAccount = (id: string, patch: Partial<Account>) => {
     if (!canEditAccess) return toast.error("无权限修改账户");
     setAccounts(accounts.map((a) => (a.id === id ? { ...a, ...patch } : a)));
     toast.success("账户已更新");
+  };
+
+  const deleteAccount = (id: string) => {
+    if (!canDelete) return toast.error("无权限删除");
+    setAccounts(accounts.filter((a) => a.id !== id));
+    toast.success("账户已删除");
+  };
+
+  const toggleStatus = (a: Account) => {
+    updateAccount(a.id, { status: a.status === "active" ? "disabled" : "active" });
   };
 
   return (
