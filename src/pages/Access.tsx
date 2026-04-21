@@ -61,10 +61,14 @@ export default function Access() {
                 <UserPlus className="h-4 w-4" /> 邀请成员
               </Button>
             </DialogTrigger>
-            <InviteDialog onInvite={(email, role) => {
+            <InviteDialog onInvite={(email, username, role) => {
               const newId = `a${accounts.length + 1}`;
-              setAccounts([...accounts, { id: newId, memberId: "u3", role, status: "invited", lastActive: "—", twoFA: false, scope: "all" }]);
-              toast.success(`已发送邀请到 ${email}`, { description: `角色: ${roleDefs[role].label}` });
+              setAccounts([...accounts, {
+                id: newId, memberId: "u3", username, role, status: "invited",
+                lastActive: "从未登录", createdAt: new Date().toLocaleString("zh-CN"),
+                twoFA: false, scope: "all",
+              }]);
+              toast.success(`已发送邀请到 ${email}`, { description: `账号: ${username} · 角色: ${roleDefs[role].label}` });
             }} />
           </Dialog>
         }
