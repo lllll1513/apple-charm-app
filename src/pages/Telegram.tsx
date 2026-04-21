@@ -117,6 +117,7 @@ export default function Telegram() {
             {schedules.map((s) => {
               const ch = tgChannels.find((c) => c.id === s.channelId)!;
               const tpl = templates[s.template];
+              const t = cronToTime(s.cron);
               return (
                 <Card key={s.id} className={`glass rounded-2xl p-5 transition-all ${!s.enabled ? "opacity-60" : "hover:shadow-elevated hover:-translate-y-0.5"}`}>
                   <div className="flex items-start justify-between mb-3">
@@ -127,7 +128,7 @@ export default function Telegram() {
                       <div>
                         <div className="font-semibold">{s.name}</div>
                         <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5">
-                          <Clock className="h-3 w-3" /> {s.cron} · 下次 {s.nextRun}
+                          <Clock className="h-3 w-3" /> {weekdayLabel(t.weekday)} {t.hh.padStart(2,"0")}:{t.mm.padStart(2,"0")} · 下次 {s.nextRun}
                         </div>
                       </div>
                     </div>
@@ -139,13 +140,16 @@ export default function Telegram() {
                       <span className="font-medium">{ch.name}</span>
                       <Badge variant="outline" className="rounded-md text-[10px] ml-auto">{ch.members} 订阅</Badge>
                     </div>
-                    <div className="text-[11px] text-muted-foreground">模板: {tpl.title}</div>
+                    <div className="text-[11px] text-muted-foreground">模板: {tpl.title} · {tpl.sample.split("\n")[0].replace(/\*/g,"").slice(0,30)}…</div>
                   </div>
                   <div className="flex items-center gap-2">
                     <Button size="sm" variant="outline" className="rounded-lg flex-1" onClick={() => triggerNow(s)} disabled={!canSend}>
                       <Sparkles className="h-3.5 w-3.5 mr-1" /> 立即推送
                     </Button>
-                    <Button size="sm" variant="ghost" className="rounded-lg" onClick={() => toast.info("预览已打开")}>
+                    <Button size="sm" variant="ghost" className="rounded-lg" onClick={() => setEditing(s)} disabled={!canManage} title="编辑时间与内容">
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button size="sm" variant="ghost" className="rounded-lg" onClick={() => { setSelectedTpl(s.template); setTplContent(templates[s.template].sample); toast.info("已切到模板编辑"); }} title="预览模板">
                       <Eye className="h-3.5 w-3.5" />
                     </Button>
                     <Button size="sm" variant="ghost" className="rounded-lg text-destructive hover:text-destructive" disabled={!canManage}
@@ -248,8 +252,8 @@ export default function Telegram() {
                 </div>
               </div>
               <div className="flex justify-end gap-2 mt-4">
-                <Button variant="outline" className="rounded-xl" disabled={!canManage}>恢复默认</Button>
-                <Button className="rounded-xl" onClick={() => toast.success("模板已保存")} disabled={!canManage}>保存模板</Button>
+                <Button variant="outline" className="rounded-xl" disabled={!canManage} onClick={resetTemplate}>恢复默认</Button>
+                <Button className="rounded-xl" onClick={saveTemplate} disabled={!canManage}>保存模板</Button>
               </div>
             </Card>
           </div>
@@ -281,6 +285,17 @@ export default function Telegram() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* 编辑推送计划 */}
+      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+        {editing && (
+          <EditScheduleDialog
+            schedule={editing}
+            templates={templates}
+            onSave={saveSchedule}
+          />
+        )}
+      </Dialog>
     </>
   );
 }
@@ -300,7 +315,9 @@ function StatCard({ icon: Icon, label, value, sub, color }: any) {
 
 function NewScheduleDialog({ onCreate }: { onCreate: (s: TgSchedule) => void }) {
   const [name, setName] = useState("");
-  const [cron, setCron] = useState("0 18 * * *");
+  const [hh, setHh] = useState("18");
+  const [mm, setMm] = useState("00");
+  const [weekday, setWeekday] = useState("*");
   const [channelId, setChannelId] = useState("tg1");
   const [template, setTemplate] = useState<TgSchedule["template"]>("daily");
 
@@ -312,11 +329,33 @@ function NewScheduleDialog({ onCreate }: { onCreate: (s: TgSchedule) => void }) 
           <label className="text-xs text-muted-foreground mb-1.5 block">计划名称</label>
           <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="例如:每日晚间总结" className="rounded-xl" />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <div>
-            <label className="text-xs text-muted-foreground mb-1.5 block">Cron 表达式</label>
-            <Input value={cron} onChange={(e) => setCron(e.target.value)} className="rounded-xl font-mono" />
+            <label className="text-xs text-muted-foreground mb-1.5 block">频率</label>
+            <Select value={weekday} onValueChange={setWeekday}>
+              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="*">每天</SelectItem>
+                <SelectItem value="1">每周一</SelectItem>
+                <SelectItem value="2">每周二</SelectItem>
+                <SelectItem value="3">每周三</SelectItem>
+                <SelectItem value="4">每周四</SelectItem>
+                <SelectItem value="5">每周五</SelectItem>
+                <SelectItem value="6">每周六</SelectItem>
+                <SelectItem value="0">每周日</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
+          <div>
+            <label className="text-xs text-muted-foreground mb-1.5 block">小时</label>
+            <Input type="number" min={0} max={23} value={hh} onChange={(e) => setHh(e.target.value)} className="rounded-xl font-mono" />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground mb-1.5 block">分钟</label>
+            <Input type="number" min={0} max={59} value={mm} onChange={(e) => setMm(e.target.value)} className="rounded-xl font-mono" />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="text-xs text-muted-foreground mb-1.5 block">目标频道</label>
             <Select value={channelId} onValueChange={setChannelId}>
@@ -326,22 +365,112 @@ function NewScheduleDialog({ onCreate }: { onCreate: (s: TgSchedule) => void }) 
               </SelectContent>
             </Select>
           </div>
-        </div>
-        <div>
-          <label className="text-xs text-muted-foreground mb-1.5 block">消息模板</label>
-          <Select value={template} onValueChange={(v: any) => setTemplate(v)}>
-            <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {Object.entries(templates).map(([k, t]) => <SelectItem key={k} value={k}>{t.title}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <div>
+            <label className="text-xs text-muted-foreground mb-1.5 block">消息模板</label>
+            <Select value={template} onValueChange={(v: any) => setTemplate(v)}>
+              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {Object.entries(defaultTemplates).map(([k, t]) => <SelectItem key={k} value={k}>{t.title}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
       <DialogFooter>
         <Button className="rounded-xl" onClick={() => name && onCreate({
-          id: `ts${Date.now()}`, name, cron, channelId, template, enabled: true,
-          lastRun: "—", nextRun: "待计算",
+          id: `ts${Date.now()}`, name, cron: timeToCron(hh, mm, weekday), channelId, template, enabled: true,
+          lastRun: "—", nextRun: `${weekdayLabel(weekday)} ${hh.padStart(2,"0")}:${mm.padStart(2,"0")}`,
         })}>创建</Button>
+      </DialogFooter>
+    </DialogContent>
+  );
+}
+
+function EditScheduleDialog({ schedule, templates, onSave }: {
+  schedule: TgSchedule;
+  templates: typeof defaultTemplates;
+  onSave: (s: TgSchedule) => void;
+}) {
+  const init = cronToTime(schedule.cron);
+  const [name, setName] = useState(schedule.name);
+  const [hh, setHh] = useState(init.hh);
+  const [mm, setMm] = useState(init.mm);
+  const [weekday, setWeekday] = useState(init.weekday);
+  const [channelId, setChannelId] = useState(schedule.channelId);
+  const [template, setTemplate] = useState<TgSchedule["template"]>(schedule.template);
+  const [content, setContent] = useState(templates[schedule.template].sample);
+
+  return (
+    <DialogContent className="rounded-2xl max-w-2xl">
+      <DialogHeader><DialogTitle>编辑推送计划</DialogTitle></DialogHeader>
+      <div className="space-y-4 py-2 max-h-[70vh] overflow-auto scrollbar-thin pr-1">
+        <div>
+          <label className="text-xs text-muted-foreground mb-1.5 block">计划名称</label>
+          <Input value={name} onChange={(e) => setName(e.target.value)} className="rounded-xl" />
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <label className="text-xs text-muted-foreground mb-1.5 block">频率</label>
+            <Select value={weekday} onValueChange={setWeekday}>
+              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="*">每天</SelectItem>
+                <SelectItem value="1">每周一</SelectItem>
+                <SelectItem value="2">每周二</SelectItem>
+                <SelectItem value="3">每周三</SelectItem>
+                <SelectItem value="4">每周四</SelectItem>
+                <SelectItem value="5">每周五</SelectItem>
+                <SelectItem value="6">每周六</SelectItem>
+                <SelectItem value="0">每周日</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground mb-1.5 block">小时</label>
+            <Input type="number" min={0} max={23} value={hh} onChange={(e) => setHh(e.target.value)} className="rounded-xl font-mono" />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground mb-1.5 block">分钟</label>
+            <Input type="number" min={0} max={59} value={mm} onChange={(e) => setMm(e.target.value)} className="rounded-xl font-mono" />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs text-muted-foreground mb-1.5 block">目标频道</label>
+            <Select value={channelId} onValueChange={setChannelId}>
+              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {tgChannels.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground mb-1.5 block">消息模板</label>
+            <Select value={template} onValueChange={(v: any) => { setTemplate(v); setContent(templates[v as keyof typeof templates].sample); }}>
+              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {Object.entries(templates).map(([k, t]) => <SelectItem key={k} value={k}>{t.title}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div>
+          <label className="text-xs text-muted-foreground mb-1.5 block flex items-center justify-between">
+            <span>推送内容 (Markdown · 变量 {`{xxx}`})</span>
+            <span className="text-[10px] text-muted-foreground/70">将覆盖该模板的内容</span>
+          </label>
+          <Textarea value={content} onChange={(e) => setContent(e.target.value)} className="rounded-xl font-mono text-xs min-h-[140px] bg-background/60" />
+        </div>
+        <div className="rounded-xl bg-secondary/40 p-3 text-[11px] text-muted-foreground">
+          📅 将于 <b className="text-foreground">{weekdayLabel(weekday)} {hh.padStart(2,"0")}:{mm.padStart(2,"0")}</b> 推送至 <b className="text-foreground">{tgChannels.find(c => c.id === channelId)?.name}</b>
+        </div>
+      </div>
+      <DialogFooter>
+        <Button className="rounded-xl" onClick={() => onSave({
+          ...schedule, name, channelId, template,
+          cron: timeToCron(hh, mm, weekday),
+          nextRun: `${weekdayLabel(weekday)} ${hh.padStart(2,"0")}:${mm.padStart(2,"0")}`,
+        })}>保存</Button>
       </DialogFooter>
     </DialogContent>
   );
