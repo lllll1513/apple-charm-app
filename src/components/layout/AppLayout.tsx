@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { inbox } from "@/data/mock";
+import { RoleSwitcher } from "@/components/RoleSwitcher";
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
@@ -29,6 +30,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               </kbd>
             </div>
             <div className="flex-1" />
+            <RoleSwitcher />
             <Button size="sm" className="rounded-xl gap-1.5 shadow-soft" onClick={() => navigate("/tasks?new=1")}>
               <Plus className="h-4 w-4" />
               <span className="hidden sm:inline">新建</span>
