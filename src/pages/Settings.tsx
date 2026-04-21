@@ -27,7 +27,7 @@ export default function Settings() {
         <TabsContent value="profile">
           <Card className="glass rounded-2xl p-7 max-w-2xl">
             <div className="flex items-center gap-5 mb-6">
-              <div className={`h-20 w-20 rounded-full bg-gradient-to-br ${getAvatarColor(user.id)} flex items-center justify-center text-3xl font-medium text-white`}>
+              <div className="h-20 w-20 rounded-full flex items-center justify-center text-3xl font-medium text-white" style={{ background: getAvatarColor(user.id) }}>
                 {user.name.charAt(0)}
               </div>
               <div>

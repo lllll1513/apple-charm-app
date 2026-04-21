@@ -10,6 +10,7 @@ import {
 import { inbox } from "@/data/mock";
 import { useAuth } from "@/hooks/useAuth";
 import { Resource, roleDefs } from "@/data/rbac";
+import { getAvatarColor } from "@/lib/avatarColors";
 
 type NavItem = { title: string; url: string; icon: any; resource?: Resource };
 
@@ -110,7 +111,7 @@ export function AppSidebar() {
       {!collapsed && (
         <SidebarFooter className="p-3">
           <div className="glass rounded-2xl p-3 flex items-center gap-3">
-            <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary to-purple flex items-center justify-center text-sm font-medium text-white">
+            <div className="h-9 w-9 rounded-full flex items-center justify-center text-sm font-medium text-white" style={{ background: getAvatarColor(user.id) }}>
               {user.name.charAt(0)}
             </div>
             <div className="flex-1 min-w-0">
