@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { Plus, Search, LayoutGrid, List } from "lucide-react";
 import { useState } from "react";
 import { Progress } from "@/components/ui/progress";
+import { getAvatarColor } from "@/lib/avatarColors";
 
 const statusLabel: Record<string, { text: string; cls: string }> = {
   active: { text: "进行中", cls: "bg-info/10 text-info" },
@@ -70,7 +71,7 @@ export default function Projects() {
                 <div className="flex items-center justify-between">
                   <div className="flex -space-x-2">
                     {p.memberIds.slice(0, 4).map((id) => (
-                      <div key={id} className="h-7 w-7 rounded-full bg-gradient-to-br from-primary/20 to-purple/20 ring-2 ring-card flex items-center justify-center text-xs font-medium text-white">{getMember(id).name.charAt(0)}</div>
+                      <div key={id} className={`h-7 w-7 rounded-full bg-gradient-to-br ${getAvatarColor(id)} ring-2 ring-card flex items-center justify-center text-xs font-medium text-white`}>{getMember(id).name.charAt(0)}</div>
                     ))}
                     {p.memberIds.length > 4 && (
                       <div className="h-7 w-7 rounded-full bg-secondary ring-2 ring-card flex items-center justify-center text-[10px] text-muted-foreground">+{p.memberIds.length - 4}</div>

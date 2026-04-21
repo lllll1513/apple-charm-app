@@ -5,6 +5,7 @@ import { Activity, CheckCircle2, Clock, Sparkles, TrendingUp, Users } from "luci
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip, Area, AreaChart, CartesianGrid } from "recharts";
 import { useNavigate } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
+import { getAvatarColor } from "@/lib/avatarColors";
 
 const Stat = ({ icon: Icon, label, value, trend, color }: any) => (
   <Card className="glass border-white/40 p-5 rounded-2xl hover:shadow-elevated transition-all duration-500 ease-apple hover:-translate-y-0.5">
@@ -119,7 +120,7 @@ export default function Overview() {
                     <div className="text-sm font-medium truncate">{t.title}</div>
                     <div className="text-xs text-muted-foreground truncate">{p.name} · {t.dueDate}</div>
                   </div>
-                  <div className="h-7 w-7 rounded-full bg-gradient-to-br from-primary/20 to-purple/20 flex items-center justify-center text-xs font-medium text-white">{m.name.charAt(0)}</div>
+                  <div className={`h-7 w-7 rounded-full bg-gradient-to-br ${getAvatarColor(t.assigneeId)} flex items-center justify-center text-xs font-medium text-white`}>{m.name.charAt(0)}</div>
                 </button>
               );
             })}

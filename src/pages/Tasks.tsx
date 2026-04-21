@@ -7,6 +7,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Plus, Search, Filter } from "lucide-react";
 import { useState, useMemo } from "react";
 import { Progress } from "@/components/ui/progress";
+import { getAvatarColor } from "@/lib/avatarColors";
 
 export default function Tasks() {
   const navigate = useNavigate();
@@ -88,7 +89,7 @@ export default function Tasks() {
                 </div>
                 <span className={`col-span-1 text-[10px] px-1.5 py-0.5 rounded justify-self-start ${priorityMeta[t.priority].color}`}>{priorityMeta[t.priority].label}</span>
                 <div className="col-span-2 flex items-center gap-2"><Progress value={t.progress} className="h-1.5 flex-1" /><span className="text-xs text-muted-foreground w-9 text-right">{t.progress}%</span></div>
-                <div className="col-span-1 h-6 w-6 rounded-full bg-gradient-to-br from-primary/20 to-purple/20 flex items-center justify-center text-xs font-medium text-white">{m.name.charAt(0)}</div>
+                <div className={`col-span-1 h-6 w-6 rounded-full bg-gradient-to-br ${getAvatarColor(m.id)} flex items-center justify-center text-xs font-medium text-white`}>{m.name.charAt(0)}</div>
                 <span className="col-span-1 text-xs text-muted-foreground text-right">{t.dueDate.slice(5)}</span>
               </button>
             );

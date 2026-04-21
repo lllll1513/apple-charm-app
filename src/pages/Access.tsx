@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getAvatarColor } from "@/lib/avatarColors";
 import { allResources, allActions, allRoles, roleDefs, resourceLabel, actionLabel, accounts as initialAccounts, AppRole, Action } from "@/data/rbac";
 import { useAuth } from "@/hooks/useAuth";
 import { getMember } from "@/data/mock";
@@ -110,7 +111,7 @@ export default function Access() {
                       <tr key={a.id} className="border-t border-border/40 hover:bg-secondary/30 transition-colors">
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
-                            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary/20 to-purple/20 flex items-center justify-center text-sm font-medium text-white">{m.name.charAt(0)}</div>
+                            <div className={`h-9 w-9 rounded-full bg-gradient-to-br ${getAvatarColor(m.id)} flex items-center justify-center text-sm font-medium text-white`}>{m.name.charAt(0)}</div>
                             <div>
                               <div className="font-medium">{m.name}</div>
                               <div className="text-xs text-muted-foreground">{m.email}</div>

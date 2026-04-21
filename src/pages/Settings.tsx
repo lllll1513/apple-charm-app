@@ -5,9 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { getAvatarColor } from "@/lib/avatarColors";
 
 export default function Settings() {
   const [dark, setDark] = useState(false);
+  const { user } = useAuth();
 
   return (
     <>
@@ -24,15 +27,16 @@ export default function Settings() {
         <TabsContent value="profile">
           <Card className="glass rounded-2xl p-7 max-w-2xl">
             <div className="flex items-center gap-5 mb-6">
-              <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-primary to-purple flex items-center justify-center text-4xl">🧑‍💼</div>
+              <div className={`h-20 w-20 rounded-full bg-gradient-to-br ${getAvatarColor(user.id)} flex items-center justify-center text-3xl font-medium text-white`}>
+                {user.name.charAt(0)}
+              </div>
               <div>
                 <Button variant="outline" className="rounded-xl">更换头像</Button>
                 <p className="text-xs text-muted-foreground mt-2">推荐 1:1 比例,小于 2MB</p>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <Field label="姓名"><Input defaultValue="陈一鸣" className="rounded-xl" /></Field>
-              <Field label="花名"><Input defaultValue="Ethan" className="rounded-xl" /></Field>
+              <Field label="花名" className="col-span-2"><Input defaultValue="Ethan" className="rounded-xl" /></Field>
               <Field label="邮箱" className="col-span-2"><Input defaultValue="chen@team.io" className="rounded-xl" /></Field>
               <Field label="部门"><Input defaultValue="产品部" className="rounded-xl" /></Field>
               <Field label="职位"><Input defaultValue="产品经理" className="rounded-xl" /></Field>

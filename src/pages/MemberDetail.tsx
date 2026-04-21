@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Mail, Building2, MessageSquare } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { getAvatarColor } from "@/lib/avatarColors";
 
 export default function MemberDetail() {
   const { id } = useParams();
@@ -22,7 +23,7 @@ export default function MemberDetail() {
       <Card className="glass rounded-3xl p-8 mb-5 relative overflow-hidden">
         <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-gradient-primary opacity-20 blur-3xl" />
         <div className="relative flex items-start gap-5">
-          <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-primary/20 to-purple/20 flex items-center justify-center text-3xl font-medium text-white shadow-elevated">{m.name.charAt(0)}</div>
+          <div className={`h-20 w-20 rounded-full bg-gradient-to-br ${getAvatarColor(m.id)} flex items-center justify-center text-3xl font-medium text-white shadow-elevated`}>{m.name.charAt(0)}</div>
           <div className="flex-1">
             <h1 className="text-2xl font-semibold tracking-tight">{m.name}</h1>
             <p className="text-muted-foreground mt-0.5">{m.role}</p>
