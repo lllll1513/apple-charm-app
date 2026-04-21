@@ -28,7 +28,7 @@ export default function Daily() {
           return (
             <Card key={d.id} className="glass rounded-2xl p-6">
               <div className="flex items-center gap-3 mb-4">
-                <div className="h-11 w-11 rounded-full bg-secondary flex items-center justify-center text-xl">{m.avatar}</div>
+                <div className="h-11 w-11 rounded-full bg-gradient-to-br from-primary/20 to-purple/20 flex items-center justify-center text-base font-medium text-white">{m.name.charAt(0)}</div>
                 <div className="flex-1">
                   <div className="font-medium">{m.name}</div>
                   <div className="text-xs text-muted-foreground">{m.role} · {d.date}</div>

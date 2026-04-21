@@ -70,8 +70,8 @@ export default function Overview() {
                 <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
                 <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
-                <Area type="monotone" dataKey="done" stroke="hsl(var(--primary))" strokeWidth={2.5} fill="url(#g1)" />
-                <Area type="monotone" dataKey="created" stroke="hsl(var(--purple))" strokeWidth={2.5} fill="url(#g2)" />
+                <Area type="monotone" dataKey="完成" stroke="hsl(var(--primary))" strokeWidth={2.5} fill="url(#g1)" />
+                <Area type="monotone" dataKey="新建" stroke="hsl(var(--purple))" strokeWidth={2.5} fill="url(#g2)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -119,7 +119,7 @@ export default function Overview() {
                     <div className="text-sm font-medium truncate">{t.title}</div>
                     <div className="text-xs text-muted-foreground truncate">{p.name} · {t.dueDate}</div>
                   </div>
-                  <span className="text-lg">{m.avatar}</span>
+                  <div className="h-7 w-7 rounded-full bg-gradient-to-br from-primary/20 to-purple/20 flex items-center justify-center text-xs font-medium text-white">{m.name.charAt(0)}</div>
                 </button>
               );
             })}

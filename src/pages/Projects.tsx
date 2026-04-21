@@ -70,7 +70,7 @@ export default function Projects() {
                 <div className="flex items-center justify-between">
                   <div className="flex -space-x-2">
                     {p.memberIds.slice(0, 4).map((id) => (
-                      <div key={id} className="h-7 w-7 rounded-full bg-secondary ring-2 ring-card flex items-center justify-center text-sm">{getMember(id).avatar}</div>
+                      <div key={id} className="h-7 w-7 rounded-full bg-gradient-to-br from-primary/20 to-purple/20 ring-2 ring-card flex items-center justify-center text-xs font-medium text-white">{getMember(id).name.charAt(0)}</div>
                     ))}
                     {p.memberIds.length > 4 && (
                       <div className="h-7 w-7 rounded-full bg-secondary ring-2 ring-card flex items-center justify-center text-[10px] text-muted-foreground">+{p.memberIds.length - 4}</div>

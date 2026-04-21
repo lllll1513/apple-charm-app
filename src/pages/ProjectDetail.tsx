@@ -64,14 +64,14 @@ export default function ProjectDetail() {
             <div className="text-xs text-muted-foreground mb-1">成员</div>
             <div className="flex -space-x-2 mt-1">
               {p.memberIds.map((id) => (
-                <div key={id} className="h-8 w-8 rounded-full bg-card ring-2 ring-card/80 flex items-center justify-center text-base">{getMember(id).avatar}</div>
+                <div key={id} className="h-8 w-8 rounded-full bg-gradient-to-br from-primary/20 to-purple/20 ring-2 ring-card/80 flex items-center justify-center text-sm font-medium text-white">{getMember(id).name.charAt(0)}</div>
               ))}
             </div>
           </div>
           <div>
             <div className="text-xs text-muted-foreground mb-1">负责人</div>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-2xl">{getMember(p.ownerId).avatar}</span>
+              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/20 to-purple/20 flex items-center justify-center text-base font-medium text-white">{getMember(p.ownerId).name.charAt(0)}</div>
               <div>
                 <div className="text-sm font-medium">{getMember(p.ownerId).name}</div>
                 <div className="text-xs text-muted-foreground">{getMember(p.ownerId).role}</div>
@@ -116,7 +116,7 @@ export default function ProjectDetail() {
                           <div className="text-sm font-medium leading-snug mb-2">{t.title}</div>
                           <div className="flex items-center justify-between">
                             <Progress value={t.progress} className="h-1 flex-1 mr-2" />
-                            <span className="text-base">{m.avatar}</span>
+                            <div className="h-5 w-5 rounded-full bg-gradient-to-br from-primary/20 to-purple/20 flex items-center justify-center text-[10px] font-medium text-white">{m.name.charAt(0)}</div>
                           </div>
                         </button>
                       );
@@ -138,7 +138,7 @@ export default function ProjectDetail() {
                   <span className="col-span-5 font-medium truncate">{t.title}</span>
                   <span className={`col-span-1 text-[10px] px-1.5 py-0.5 rounded justify-self-start ${priorityMeta[t.priority].color}`}>{priorityMeta[t.priority].label}</span>
                   <div className="col-span-3"><Progress value={t.progress} className="h-1.5" /></div>
-                  <span className="col-span-1 text-lg justify-self-center">{m.avatar}</span>
+                  <div className="col-span-1 h-6 w-6 rounded-full bg-gradient-to-br from-primary/20 to-purple/20 flex items-center justify-center text-xs font-medium text-white justify-self-center">{m.name.charAt(0)}</div>
                   <span className="col-span-1 text-xs text-muted-foreground text-right">{t.dueDate.slice(5)}</span>
                 </button>
               );
@@ -152,7 +152,7 @@ export default function ProjectDetail() {
               const m = getMember(id);
               return (
                 <Card key={id} className="glass rounded-2xl p-4 flex items-center gap-3 cursor-pointer hover:shadow-elevated transition" onClick={() => navigate(`/team/${id}`)}>
-                  <div className="h-12 w-12 rounded-full bg-secondary flex items-center justify-center text-2xl">{m.avatar}</div>
+                  <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary/20 to-purple/20 flex items-center justify-center text-lg font-medium text-white">{m.name.charAt(0)}</div>
                   <div className="flex-1">
                     <div className="font-medium">{m.name}{id === p.ownerId && <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary">负责人</span>}</div>
                     <div className="text-xs text-muted-foreground">{m.role} · {m.department}</div>

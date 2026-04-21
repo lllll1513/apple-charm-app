@@ -77,7 +77,7 @@ export default function TaskDetail() {
                 const author = getMember(c.authorId);
                 return (
                   <div key={c.id} className="flex gap-3">
-                    <div className="h-9 w-9 rounded-full bg-secondary flex items-center justify-center text-lg shrink-0">{author.avatar}</div>
+                    <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary/20 to-purple/20 flex items-center justify-center text-sm font-medium text-white shrink-0">{author.name.charAt(0)}</div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-baseline gap-2 mb-1">
                         <span className="text-sm font-medium">{author.name}</span>
@@ -104,7 +104,8 @@ export default function TaskDetail() {
             <div className="space-y-3.5 text-sm">
               <Field label="负责人">
                 <button onClick={() => navigate(`/team/${m.id}`)} className="flex items-center gap-2 hover:text-primary">
-                  <span className="text-lg">{m.avatar}</span><span>{m.name}</span>
+                  <div className="h-6 w-6 rounded-full bg-gradient-to-br from-primary/20 to-purple/20 flex items-center justify-center text-xs font-medium text-white">{m.name.charAt(0)}</div>
+                  <span>{m.name}</span>
                 </button>
               </Field>
               <Field label="项目">

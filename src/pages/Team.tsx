@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Search, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { getAvatarColor } from "@/lib/avatarColors";
 
 export default function Team() {
   const navigate = useNavigate();
@@ -37,7 +38,7 @@ export default function Team() {
                   <Card key={m.id} onClick={() => navigate(`/team/${m.id}`)}
                     className="glass rounded-2xl p-5 cursor-pointer hover:shadow-elevated hover:-translate-y-0.5 transition-all duration-300 ease-apple">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="h-12 w-12 rounded-full bg-gradient-to-br from-secondary to-accent flex items-center justify-center text-2xl">{m.avatar}</div>
+                      <div className={`h-12 w-12 rounded-full bg-gradient-to-br ${getAvatarColor(m.id)} flex items-center justify-center text-lg font-medium text-white`}>{m.name.charAt(0)}</div>
                       <div className="min-w-0 flex-1">
                         <div className="font-medium truncate">{m.name}</div>
                         <div className="text-xs text-muted-foreground truncate">{m.role}</div>

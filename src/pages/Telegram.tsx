@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { tgChannels, tgSchedules as initialSchedules, tgLogs as initialLogs, TgSchedule } from "@/data/rbac";
-import { Send, Plus, Bot, Hash, Users, CheckCircle2, XCircle, Clock, Sparkles, Calendar, Eye, Trash2, Power } from "lucide-react";
+import { Send, Plus, Bot, Hash, Users, CheckCircle2, XCircle, Clock, Sparkles, Calendar, Eye, Trash2, Edit2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
@@ -22,6 +22,20 @@ const templates: Record<string, { title: string; sample: string }> = {
   alert:   { title: "高危预警",   sample: "🚨 *风险提醒*\n\n任务「{task}」 已逾期 {days} 天\n负责人: {owner}\n关联项目: {project}" },
 };
 
+const presetTimes = [
+  { label: "每天 9:00", value: "0 9 * * *" },
+  { label: "每天 12:00", value: "0 12 * * *" },
+  { label: "每天 18:00", value: "0 18 * * *" },
+  { label: "每天 21:00", value: "0 21 * * *" },
+  { label: "每周一 9:00", value: "0 9 * * 1" },
+  { label: "自定义", value: "custom" },
+];
+
+const getCronLabel = (cron: string) => {
+  const preset = presetTimes.find(t => t.value === cron);
+  return preset ? preset.label : "自定义时间";
+};
+
 export default function Telegram() {
   const { can } = useAuth();
   const canManage = can("telegram", "edit");
@@ -31,6 +45,10 @@ export default function Telegram() {
   const [logs, setLogs] = useState(initialLogs);
   const [selectedTpl, setSelectedTpl] = useState<keyof typeof templates>("daily");
   const [tplContent, setTplContent] = useState(templates.daily.sample);
+  const [editingSchedule, setEditingSchedule] = useState<string | null>(null);
+  const [editTimeMode, setEditTimeMode] = useState<"preset" | "custom">("preset");
+  const [editHour, setEditHour] = useState("18");
+  const [editMinute, setEditMinute] = useState("00");
 
   const triggerNow = (s: TgSchedule) => {
     const ch = tgChannels.find((c) => c.id === s.channelId)!;
@@ -50,6 +68,34 @@ export default function Telegram() {
   const toggleSchedule = (id: string) => {
     if (!canManage) return toast.error("无权限");
     setSchedules(schedules.map((s) => (s.id === id ? { ...s, enabled: !s.enabled } : s)));
+  };
+
+  const updateSchedule = (id: string, updates: Partial<TgSchedule>) => {
+    if (!canManage) return toast.error("无权限");
+    setSchedules(schedules.map((s) => (s.id === id ? { ...s, ...updates } : s)));
+    setEditingSchedule(null);
+    setEditTimeMode("preset");
+    toast.success("推送计划已更新");
+  };
+
+  const handleEditTimePreset = (scheduleId: string, value: string) => {
+    if (value === "custom") {
+      setEditTimeMode("custom");
+      const schedule = schedules.find(s => s.id === scheduleId);
+      if (schedule) {
+        const parts = schedule.cron.split(" ");
+        setEditHour(parts[1] || "18");
+        setEditMinute(parts[0] || "0");
+      }
+    } else {
+      setEditTimeMode("preset");
+      updateSchedule(scheduleId, { cron: value });
+    }
+  };
+
+  const handleEditCustomTime = (scheduleId: string) => {
+    const cronExpr = `${editMinute} ${editHour} * * *`;
+    updateSchedule(scheduleId, { cron: cronExpr });
   };
 
   return (
@@ -91,6 +137,7 @@ export default function Telegram() {
             {schedules.map((s) => {
               const ch = tgChannels.find((c) => c.id === s.channelId)!;
               const tpl = templates[s.template];
+              const isEditing = editingSchedule === s.id;
               return (
                 <Card key={s.id} className={`glass rounded-2xl p-5 transition-all ${!s.enabled ? "opacity-60" : "hover:shadow-elevated hover:-translate-y-0.5"}`}>
                   <div className="flex items-start justify-between mb-3">
@@ -99,9 +146,67 @@ export default function Telegram() {
                         <Send className="h-5 w-5 text-primary" />
                       </div>
                       <div>
-                        <div className="font-semibold">{s.name}</div>
+                        {isEditing ? (
+                          <Input 
+                            defaultValue={s.name} 
+                            onBlur={(e) => updateSchedule(s.id, { name: e.target.value })}
+                            className="h-7 text-sm font-semibold rounded-lg mb-1"
+                          />
+                        ) : (
+                          <div className="font-semibold">{s.name}</div>
+                        )}
                         <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5">
-                          <Clock className="h-3 w-3" /> {s.cron} · 下次 {s.nextRun}
+                          <Clock className="h-3 w-3" />
+                          {isEditing ? (
+                            <div className="flex-1">
+                              <Select 
+                                defaultValue={s.cron} 
+                                onValueChange={(v) => handleEditTimePreset(s.id, v)}
+                              >
+                                <SelectTrigger className="h-6 text-xs rounded-lg">
+                                  <SelectValue placeholder={getCronLabel(s.cron)} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {presetTimes.map((t) => (
+                                    <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              {editTimeMode === "custom" && (
+                                <div className="flex gap-1.5 mt-1.5 items-center">
+                                  <Input 
+                                    type="number" 
+                                    min="0" 
+                                    max="23" 
+                                    value={editHour} 
+                                    onChange={(e) => setEditHour(e.target.value)}
+                                    placeholder="时"
+                                    className="h-7 text-xs rounded-lg w-14 text-center"
+                                  />
+                                  <span className="text-xs text-muted-foreground">:</span>
+                                  <Input 
+                                    type="number" 
+                                    min="0" 
+                                    max="59" 
+                                    value={editMinute} 
+                                    onChange={(e) => setEditMinute(e.target.value)}
+                                    placeholder="分"
+                                    className="h-7 text-xs rounded-lg w-14 text-center"
+                                  />
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline" 
+                                    className="h-7 text-xs rounded-lg px-3"
+                                    onClick={() => handleEditCustomTime(s.id)}
+                                  >
+                                    确定
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <span>{getCronLabel(s.cron)} · 下次 {s.nextRun}</span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -110,22 +215,60 @@ export default function Telegram() {
                   <div className="p-3 rounded-xl bg-secondary/40 border border-border/40 mb-3">
                     <div className="flex items-center gap-2 text-xs mb-1.5">
                       <Hash className="h-3 w-3 text-muted-foreground" />
-                      <span className="font-medium">{ch.name}</span>
-                      <Badge variant="outline" className="rounded-md text-[10px] ml-auto">{ch.members} 订阅</Badge>
+                      {isEditing ? (
+                        <Select value={s.channelId} onValueChange={(v) => updateSchedule(s.id, { channelId: v })}>
+                          <SelectTrigger className="h-6 text-xs rounded-lg w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {tgChannels.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <>
+                          <span className="font-medium">{ch.name}</span>
+                          <Badge variant="outline" className="rounded-md text-[10px] ml-auto">{ch.members} 订阅</Badge>
+                        </>
+                      )}
                     </div>
-                    <div className="text-[11px] text-muted-foreground">模板: {tpl.title}</div>
+                    <div className="text-[11px] text-muted-foreground">
+                      模板: 
+                      {isEditing ? (
+                        <Select value={s.template} onValueChange={(v: any) => updateSchedule(s.id, { template: v })}>
+                          <SelectTrigger className="h-6 text-[11px] rounded-lg w-full mt-1">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Object.entries(templates).map(([k, t]) => <SelectItem key={k} value={k}>{t.title}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <span> {tpl.title}</span>
+                      )}
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button size="sm" variant="outline" className="rounded-lg flex-1" onClick={() => triggerNow(s)} disabled={!canSend}>
-                      <Sparkles className="h-3.5 w-3.5 mr-1" /> 立即推送
-                    </Button>
-                    <Button size="sm" variant="ghost" className="rounded-lg" onClick={() => toast.info("预览已打开")}>
-                      <Eye className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button size="sm" variant="ghost" className="rounded-lg text-destructive hover:text-destructive" disabled={!canManage}
-                      onClick={() => { setSchedules(schedules.filter(x => x.id !== s.id)); toast.success("已删除"); }}>
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
+                    {isEditing ? (
+                      <Button size="sm" variant="default" className="rounded-lg flex-1" onClick={() => setEditingSchedule(null)}>
+                        <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> 完成编辑
+                      </Button>
+                    ) : (
+                      <>
+                        <Button size="sm" variant="outline" className="rounded-lg flex-1" onClick={() => triggerNow(s)} disabled={!canSend}>
+                          <Sparkles className="h-3.5 w-3.5 mr-1" /> 立即推送
+                        </Button>
+                        <Button size="sm" variant="ghost" className="rounded-lg" onClick={() => toast.info("预览已打开")}>
+                          <Eye className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button size="sm" variant="ghost" className="rounded-lg" disabled={!canManage} onClick={() => setEditingSchedule(s.id)}>
+                          <Edit2 className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button size="sm" variant="ghost" className="rounded-lg text-destructive hover:text-destructive" disabled={!canManage}
+                          onClick={() => { setSchedules(schedules.filter(x => x.id !== s.id)); toast.success("已删除"); }}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </>
+                    )}
                   </div>
                   <div className="text-[10px] text-muted-foreground mt-3">上次执行: {s.lastRun}</div>
                 </Card>
@@ -274,9 +417,35 @@ function StatCard({ icon: Icon, label, value, sub, color }: any) {
 
 function NewScheduleDialog({ onCreate }: { onCreate: (s: TgSchedule) => void }) {
   const [name, setName] = useState("");
+  const [timeMode, setTimeMode] = useState<"preset" | "custom">("preset");
+  const [hour, setHour] = useState("18");
+  const [minute, setMinute] = useState("00");
   const [cron, setCron] = useState("0 18 * * *");
   const [channelId, setChannelId] = useState("tg1");
   const [template, setTemplate] = useState<TgSchedule["template"]>("daily");
+
+  const presetTimes = [
+    { label: "每天 9:00", value: "0 9 * * *" },
+    { label: "每天 12:00", value: "0 12 * * *" },
+    { label: "每天 18:00", value: "0 18 * * *" },
+    { label: "每天 21:00", value: "0 21 * * *" },
+    { label: "每周一 9:00", value: "0 9 * * 1" },
+    { label: "自定义", value: "custom" },
+  ];
+
+  const handlePresetChange = (value: string) => {
+    if (value === "custom") {
+      setTimeMode("custom");
+    } else {
+      setTimeMode("preset");
+      setCron(value);
+    }
+  };
+
+  const handleCustomTime = () => {
+    const cronExpr = `${minute} ${hour} * * *`;
+    setCron(cronExpr);
+  };
 
   return (
     <DialogContent className="rounded-2xl">
@@ -286,11 +455,47 @@ function NewScheduleDialog({ onCreate }: { onCreate: (s: TgSchedule) => void }) 
           <label className="text-xs text-muted-foreground mb-1.5 block">计划名称</label>
           <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="例如:每日晚间总结" className="rounded-xl" />
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="text-xs text-muted-foreground mb-1.5 block">Cron 表达式</label>
-            <Input value={cron} onChange={(e) => setCron(e.target.value)} className="rounded-xl font-mono" />
+        
+        <div>
+          <label className="text-xs text-muted-foreground mb-1.5 block">推送时间</label>
+          <Select defaultValue="0 18 * * *" onValueChange={handlePresetChange}>
+            <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {presetTimes.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {timeMode === "custom" && (
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-muted-foreground mb-1.5 block">小时 (0-23)</label>
+              <Input 
+                type="number" 
+                min="0" 
+                max="23" 
+                value={hour} 
+                onChange={(e) => setHour(e.target.value)} 
+                onBlur={handleCustomTime}
+                className="rounded-xl" 
+              />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1.5 block">分钟 (0-59)</label>
+              <Input 
+                type="number" 
+                min="0" 
+                max="59" 
+                value={minute} 
+                onChange={(e) => setMinute(e.target.value)} 
+                onBlur={handleCustomTime}
+                className="rounded-xl" 
+              />
+            </div>
           </div>
+        )}
+
+        <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="text-xs text-muted-foreground mb-1.5 block">目标频道</label>
             <Select value={channelId} onValueChange={setChannelId}>
@@ -300,19 +505,19 @@ function NewScheduleDialog({ onCreate }: { onCreate: (s: TgSchedule) => void }) 
               </SelectContent>
             </Select>
           </div>
-        </div>
-        <div>
-          <label className="text-xs text-muted-foreground mb-1.5 block">消息模板</label>
-          <Select value={template} onValueChange={(v: any) => setTemplate(v)}>
-            <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {Object.entries(templates).map(([k, t]) => <SelectItem key={k} value={k}>{t.title}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <div>
+            <label className="text-xs text-muted-foreground mb-1.5 block">消息模板</label>
+            <Select value={template} onValueChange={(v: any) => setTemplate(v)}>
+              <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {Object.entries(templates).map(([k, t]) => <SelectItem key={k} value={k}>{t.title}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
       <DialogFooter>
-        <Button className="rounded-xl" onClick={() => name && onCreate({
+        <Button className="rounded-xl" onClick={() => name && cron && onCreate({
           id: `ts${Date.now()}`, name, cron, channelId, template, enabled: true,
           lastRun: "—", nextRun: "待计算",
         })}>创建</Button>

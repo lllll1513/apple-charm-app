@@ -88,8 +88,8 @@ export default function Executive() {
                 <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
                 <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
-                <Area type="monotone" dataKey="done" name="完成" stroke="hsl(var(--success))" strokeWidth={2.5} fill="url(#ex1)" />
-                <Area type="monotone" dataKey="created" name="新建" stroke="hsl(var(--warning))" strokeWidth={2.5} fill="url(#ex2)" />
+                <Area type="monotone" dataKey="完成" name="完成" stroke="hsl(var(--success))" strokeWidth={2.5} fill="url(#ex1)" />
+                <Area type="monotone" dataKey="新建" name="新建" stroke="hsl(var(--warning))" strokeWidth={2.5} fill="url(#ex2)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>

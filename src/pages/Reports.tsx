@@ -56,8 +56,8 @@ export default function Reports() {
                 <XAxis dataKey="day" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
                 <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }} />
-                <Bar dataKey="created" fill="hsl(var(--purple))" radius={[8, 8, 0, 0]} />
-                <Bar dataKey="done" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="新建" fill="hsl(var(--purple))" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="完成" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

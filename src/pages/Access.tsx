@@ -110,7 +110,7 @@ export default function Access() {
                       <tr key={a.id} className="border-t border-border/40 hover:bg-secondary/30 transition-colors">
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
-                            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary/20 to-purple/20 flex items-center justify-center text-base">{m.avatar}</div>
+                            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary/20 to-purple/20 flex items-center justify-center text-sm font-medium text-white">{m.name.charAt(0)}</div>
                             <div>
                               <div className="font-medium">{m.name}</div>
                               <div className="text-xs text-muted-foreground">{m.email}</div>

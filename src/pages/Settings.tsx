@@ -33,8 +33,7 @@ export default function Settings() {
             <div className="grid grid-cols-2 gap-4">
               <Field label="姓名"><Input defaultValue="陈一鸣" className="rounded-xl" /></Field>
               <Field label="花名"><Input defaultValue="Ethan" className="rounded-xl" /></Field>
-              <Field label="邮箱"><Input defaultValue="chen@team.io" className="rounded-xl" /></Field>
-              <Field label="手机"><Input defaultValue="+86 138 ****" className="rounded-xl" /></Field>
+              <Field label="邮箱" className="col-span-2"><Input defaultValue="chen@team.io" className="rounded-xl" /></Field>
               <Field label="部门"><Input defaultValue="产品部" className="rounded-xl" /></Field>
               <Field label="职位"><Input defaultValue="产品经理" className="rounded-xl" /></Field>
             </div>
@@ -87,8 +86,8 @@ export default function Settings() {
   );
 }
 
-const Field = ({ label, children }: any) => (
-  <div>
+const Field = ({ label, children, className }: any) => (
+  <div className={className}>
     <label className="text-xs text-muted-foreground mb-1.5 block">{label}</label>
     {children}
   </div>

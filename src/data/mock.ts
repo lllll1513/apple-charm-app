@@ -266,11 +266,11 @@ export const getTask = (id: string) => tasks.find((t) => t.id === id)!;
 
 // Trend mock data
 export const weekTrend = [
-  { day: "周一", done: 12, created: 18 },
-  { day: "周二", done: 15, created: 14 },
-  { day: "周三", done: 9, created: 11 },
-  { day: "周四", done: 18, created: 16 },
-  { day: "周五", done: 14, created: 12 },
-  { day: "周六", done: 6, created: 4 },
-  { day: "周日", done: 3, created: 2 },
+  { day: "周一", 完成: 12, 新建: 18 },
+  { day: "周二", 完成: 15, 新建: 14 },
+  { day: "周三", 完成: 9, 新建: 11 },
+  { day: "周四", 完成: 18, 新建: 16 },
+  { day: "周五", 完成: 14, 新建: 12 },
+  { day: "周六", 完成: 6, 新建: 4 },
+  { day: "周日", 完成: 3, 新建: 2 },
 ];

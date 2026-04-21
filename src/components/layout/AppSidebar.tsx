@@ -110,8 +110,8 @@ export function AppSidebar() {
       {!collapsed && (
         <SidebarFooter className="p-3">
           <div className="glass rounded-2xl p-3 flex items-center gap-3">
-            <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary to-purple flex items-center justify-center text-base">
-              {user.avatar}
+            <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary to-purple flex items-center justify-center text-sm font-medium text-white">
+              {user.name.charAt(0)}
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-sm font-medium truncate">{user.name}</div>
